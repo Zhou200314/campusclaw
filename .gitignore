@@ -4,4 +4,6 @@ dist/
 data/
 uploads/
 *.log
+.idea/
+.vscode/
 .DS_Store
