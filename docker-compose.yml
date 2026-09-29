@@ -1,0 +1,84 @@
+# CampusClaw 迭代 1 · Docker Compose 部署
+#
+# 架构：web(nginx) → api(Node + SQLite)
+#   · web  对外暴露端口，托管前端构建产物，并把 /api 反向代理到 api
+#   · api  提供接口；SQLite 数据文件与上传文件放在命名卷里，down/up 后数据仍在
+#   · db   本迭代数据层为 SQLite（单实例、免额外容器），对应课程"三服务"中的 db 以命名卷承载；
+#          若后续要换成独立的 MySQL 服务，只需替换 backend/src/db.js 并在此文件增加 db 服务。
+#
+# 用法：
+#   1) 复制 .env.example 为 .env，至少设置 SESSION_SECRET、SEED_TEACHER_PASSWORD、SEED_STUDENT_PASSWORD
+#   2) docker compose up -d --build
+#   3) 浏览器打开 http://localhost:8080/
+#
+# 必填变量使用 ${VAR:?message} 语法：未设置时 compose 直接报错退出（与"缺配置即启动失败"一致）。
+
+name: campusclaw
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    image: campusclaw-api:iter1
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "8080"
+      DB_PATH: /app/data/campusclaw.db
+      UPLOAD_DIR: /app/uploads
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-10485760}
+      SESSION_TTL_SECONDS: ${SESSION_TTL_SECONDS:-7200}
+      LOGIN_FAIL_THRESHOLD: ${LOGIN_FAIL_THRESHOLD:-5}
+      LOGIN_LOCK_SECONDS: ${LOGIN_LOCK_SECONDS:-60}
+      TRUST_PROXY: "1"
+      CROSS_CLASS_VISIBLE: ${CROSS_CLASS_VISIBLE:-0}
+      SESSION_SECRET: ${SESSION_SECRET:?未设置 SESSION_SECRET：请在项目根目录 .env 中提供}
+      SEED_TEACHER_PASSWORD: ${SEED_TEACHER_PASSWORD:?未设置 SEED_TEACHER_PASSWORD}
+      SEED_STUDENT_PASSWORD: ${SEED_STUDENT_PASSWORD:?未设置 SEED_STUDENT_PASSWORD}
+    volumes:
+      - campusclaw-data:/app/data
+      - campusclaw-uploads:/app/uploads
+    expose:
+      - "8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/api/me').then(r=>process.exit(r.status===401?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks:
+      - campusclaw
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+    image: campusclaw-web:iter1
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    networks:
+      - campusclaw
+
+volumes:
+  campusclaw-data:
+  campusclaw-uploads:
+
+networks:
+  campusclaw:
+    driver: bridge

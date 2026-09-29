@@ -1,0 +1,12 @@
+# 构建上下文排除项：密钥、本地数据与依赖都不进镜像
+**/node_modules
+**/dist
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+data
+uploads
+docs/evidence
+*.log

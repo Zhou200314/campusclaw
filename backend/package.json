@@ -1,0 +1,17 @@
+{
+  "name": "campusclaw-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CampusClaw 迭代 1 后端：会话 Cookie 登录、角色权限、班级隔离、材料与知识库入库",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "seed": "node src/seed.js --force"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "multer": "^2.4.0"
+  }
+}

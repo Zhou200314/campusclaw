@@ -1,0 +1,26 @@
+{
+  "name": "campusclaw",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CampusClaw 迭代 1：登录与会话、角色权限、班级隔离、材料与知识库入库底座",
+  "type": "module",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "build:offline": "cd frontend && node scripts/build-offline.mjs",
+    "start": "node backend/src/server.js",
+    "dev": "node backend/src/server.js",
+    "seed": "node backend/src/seed.js --force",
+    "capture:login": "node scripts/capture-login-evidence.mjs",
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "capture:upload": "node scripts/capture-upload-evidence.mjs",
+    "compose:smoke": "node scripts/compose-smoke.mjs",
+    "probe:files": "node scripts/probe-file-types.mjs"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}
